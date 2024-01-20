@@ -22,7 +22,7 @@ cdef class Resources:
         check_error(AMGX_resources_create_simple(&self.rsrc, cfg.cfg))
         return self
 
-    def create(self, Config cfg, devices):
+    def create(self, Config cfg, devices, mpi=False):
         """
         rsc.create(cfg, NULL, 1, devices)
         
@@ -40,9 +40,14 @@ cdef class Resources:
         -------
         self : Resources
         """
-        cdef int device_num = 1
+        cdef int* nvamg_comm = NULL
+        if mpi:
+            MPI_Init(NULL, NULL)
+            cdef int* master_node = 0  #
+            nvamg_comm = NULL
+        cdef int device_num = len(devices)
         cdef uintptr_t devices_ptr = ptr_from_array_interface(devices, "int32")
-        check_error(AMGX_resources_create(&self.rsrc, cfg.cfg, NULL, device_num, <const int*> devices_ptr))
+        check_error(AMGX_resources_create(&self.rsrc, cfg.cfg, nvamg_comm, device_num, <const int*> devices_ptr))
         return self
 
     def destroy(self):
