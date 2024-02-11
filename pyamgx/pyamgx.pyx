@@ -1,9 +1,6 @@
 # cython: language_level=3
-
 include "amgxc.pxi"
 include "amgxconfig.pxi"
-
-include "mpic.pxi"
 
 include "utils.pyx"
 include "Errors.pyx"

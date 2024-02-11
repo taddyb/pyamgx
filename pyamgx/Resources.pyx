@@ -1,8 +1,12 @@
+from mpi4py import MPI
+
 cdef class Resources:
     """
     Resources: Class for creating and freeing AMGX Resources objects.
     """
     cdef AMGX_resources_handle rsrc
+    cdef extern from "mhpi.h"
+        ctypedef void* MPI_Comm
 
     def create_simple(self, Config cfg):
         """
@@ -22,9 +26,9 @@ cdef class Resources:
         check_error(AMGX_resources_create_simple(&self.rsrc, cfg.cfg))
         return self
 
-    def create(self, Config cfg, devices, mpi=False):
+    def create(self, Config cfg, devices, comm=None):
         """
-        rsc.create(cfg, NULL, 1, devices)
+        rsc.create(cfg, devices, MPI_Comm)
         
         Create the underlying AMGX Resources object for a specific 
         device on a single-threaded application
@@ -33,21 +37,18 @@ cdef class Resources:
 
         Parameters
         ----------
-        cfg : Config
-        device : array_like
+        cfg : Config object
+        devices : array_like of size device_num listing the GPU indices which will be used by the rank
+        comm : A pointer to the communication specifier
 
         Returns
         -------
         self : Resources
         """
-        cdef int* nvamg_comm = NULL
-        if mpi:
-            MPI_Init(NULL, NULL)
-            cdef int* master_node = 0  #
-            nvamg_comm = NULL
+        cdef MPI_Comm nvamg_comm = <MPI_Comm> MPI.COMM_WORLD.py2f() if comm is None else <MPI_Comm>comm.py2f()
         cdef int device_num = len(devices)
         cdef uintptr_t devices_ptr = ptr_from_array_interface(devices, "int32")
-        check_error(AMGX_resources_create(&self.rsrc, cfg.cfg, nvamg_comm, device_num, <const int*> devices_ptr))
+        check_error(AMGX_resources_create(&self.rsrc, cfg.cfg, &nvamg_comm, device_num, <const int*> devices_ptr))
         return self
 
     def destroy(self):
