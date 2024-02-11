@@ -78,7 +78,7 @@ ext = cythonize([
 
 setup(name='pyamgx',
       author='Ashwin Srinath',
-      version='0.1.2',
+      version='0.1.3',
       ext_modules = ext,
       data_files=data_files,
       zip_safe=False)

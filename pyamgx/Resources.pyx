@@ -40,10 +40,22 @@ cdef class Resources:
         -------
         self : Resources
         """
-        cdef int device_num = 1
+        print("cfg:", cfg)
+        print("devices:", devices)
+
+        
+        cdef int device_num = len(devices)
         cdef uintptr_t devices_ptr = ptr_from_array_interface(devices, "int32")
+
+        # Convert C data types to Python data types before printing
+        print("device_num:", device_num)
+        print("devices_ptr:", <long>devices_ptr)
         check_error(AMGX_resources_create(&self.rsrc, cfg.cfg, NULL, device_num, <const int*> devices_ptr))
+        import torch
+        import numpy as np
+        print("current torch device:", torch.cuda.current_device()) 
         return self
+
 
     def destroy(self):
         """

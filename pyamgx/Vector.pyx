@@ -130,14 +130,23 @@ cdef class Vector:
         data : array, ndim=1
             Array to copy data to.
         """
+        import torch
+        import numpy as np
+        print("current torch device:", torch.cuda.current_device())
+        print("Initial data:", np.array(data))
+        print("Device:", device)
+
         if data is None:
             n = self.get_size()[0]
             data = np.zeros(n, dtype=np.float64)
+            print("Size of data (n):", n)
+            print("New data array:", data)
 
         self.download_raw(<uintptr_t> &data[0])
-        return torch.tensor(data, device=torch.device(device))
-
-
+    
+        tensor_data = torch.tensor(data, device=torch.device(device))
+        print("Tensor data:", tensor_data)
+        return tensor_data
 
     def download_raw(self, uintptr_t ptr):
         """
