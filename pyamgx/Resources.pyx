@@ -1,3 +1,5 @@
+include "mpic.pxi"
+
 from mpi4py import MPI
 
 cdef class Resources:
@@ -5,8 +7,6 @@ cdef class Resources:
     Resources: Class for creating and freeing AMGX Resources objects.
     """
     cdef AMGX_resources_handle rsrc
-    cdef extern from "mhpi.h"
-        ctypedef void* MPI_Comm
 
     def create_simple(self, Config cfg):
         """
@@ -45,7 +45,9 @@ cdef class Resources:
         -------
         self : Resources
         """
-        cdef MPI_Comm nvamg_comm = <MPI_Comm> MPI.COMM_WORLD.py2f() if comm is None else <MPI_Comm>comm.py2f()
+        if comm is None:
+            comm = MPI.COMM_WORLD
+        cdef MPI_Comm nvamg_comm = <MPI_Comm>comm.handle
         cdef int device_num = len(devices)
         cdef uintptr_t devices_ptr = ptr_from_array_interface(devices, "int32")
         check_error(AMGX_resources_create(&self.rsrc, cfg.cfg, &nvamg_comm, device_num, <const int*> devices_ptr))

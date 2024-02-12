@@ -1,4 +1,4 @@
-from mpi4py import MPI
+import mpi4py
 import  os
 import warnings
 from os.path import join as pjoin
@@ -9,7 +9,8 @@ import numpy
 
 AMGX_DIR = os.environ.get('AMGX_DIR')
 AMGX_BUILD_DIR = os.environ.get('AMGX_BUILD_DIR')
-
+MPI_DIR = os.environ.get('MPI_DIR')
+MPI_BUILD_DIR = os.environ.get('MPI_BUILD_DIR')
 
 if sys.platform == "win32":
     lib_name = 'amgxsh.dll'
@@ -41,6 +42,27 @@ else:
         os.path.join(AMGX_DIR, 'include')
     ]
 
+MPI_include_dirs = []
+MPI_lib_dirs = []
+
+if not MPI_DIR:
+    PREFIX = sys.prefix
+    if os.path.isfile(os.path.join(PREFIX, 'lib/libmpi.so')):
+        MPI_include_dirs = [os.path.join(PREFIX, 'include')]
+        MPI_lib_dirs = [os.path.join(PREFIX, 'lib')]
+    else:
+        print(sys.prefix)
+        print(f"Cannot locate MPI_DIR installation")
+else:
+ #   if not MPI_BUILD_DIR:
+ #       MPI_BUILD_DIR = os.path.join(MPI_BUILD_DIR, 'build')
+
+#    for root, dirs, files in os.walk(MPI_BUILD_DIR)
+#        if lib_name in 
+
+    MPI_include_dirs = [os.path.join(MPI_DIR, 'include')]
+    MPI_lib_dirs = [os.path.join(MPI_DIR, 'lib')]
+
 lib_file_path = os.path.join(lib_path, lib_name)
 
 runtime_lib_dirs = []
@@ -69,12 +91,12 @@ ext = cythonize([
         libraries=['amgxsh'],
         language='c',
         include_dirs = [
-            MPI.get_include(),
+            mpi4py.get_include(),
             numpy.get_include(),
-        ] + AMGX_include_dirs,
+        ] + AMGX_include_dirs + MPI_include_dirs,
         library_dirs = [
             numpy.get_include(),
-        ] + AMGX_lib_dirs,
+        ] + AMGX_lib_dirs + MPI_lib_dirs,
         runtime_library_dirs = runtime_lib_dirs
 )])
 
